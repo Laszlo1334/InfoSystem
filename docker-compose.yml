@@ -63,7 +63,34 @@ services:
     ports:
       - "9187:9187"   # опціонально, щоб дивитись з хоста
 
+  # Python-генератор даних
+  generator:
+    build: ./python
+    container_name: dbm_generator
+    restart: on-failure
+    environment:
+      # Передаємо змінні, щоб не тримати їх у .env всередині контейнера
+      - POSTGRES_USER=${POSTGRES_USER:-metrics}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-metrics_pass}
+      - POSTGRES_DB=${POSTGRES_DB:-metrics_db}
+      - POSTGRES_HOST=postgres  # << host назва сервісу postgres
+      - POSTGRES_PORT=5432      # << внутрішній порт postgres
+    depends_on:
+      postgres:
+        condition: service_healthy  # << чекаємо на healthcheck
+
+  # Сервер авторизації
+  auth:
+    build: ./auth
+    container_name: dbm_auth
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - authdata:/app
+
 volumes:
   pgdata:
   promdata:
   grafanadata:
+  authdata:
