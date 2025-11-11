@@ -1,8 +1,8 @@
 #!/bin/sh
 
-# Ініціалізуємо базу даних
+# Initialize database
 python database.py
 
-# Запускаємо Flask-додаток
+# Start Flask application
 exec python main.py
 

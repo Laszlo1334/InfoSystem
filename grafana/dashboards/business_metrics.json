@@ -1,0 +1,208 @@
+{
+  "title": "Business Metrics",
+  "tags": ["business", "resources", "users"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "type": "graph",
+      "title": "Resource Operations Rate",
+      "targets": [
+        {
+          "expr": "rate(pg_stat_user_tables_n_tup_ins{relname=\"resources\"}[5m])",
+          "legendFormat": "INSERT operations/sec",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(pg_stat_user_tables_n_tup_upd{relname=\"resources\"}[5m])",
+          "legendFormat": "UPDATE operations/sec",
+          "refId": "B"
+        },
+        {
+          "expr": "rate(pg_stat_user_tables_n_tup_del{relname=\"resources\"}[5m])",
+          "legendFormat": "DELETE operations/sec",
+          "refId": "C"
+        }
+      ],
+      "datasource": "Prometheus",
+      "xaxis": {
+        "mode": "time"
+      },
+      "yaxes": [
+        {
+          "format": "ops",
+          "label": "Operations/sec"
+        },
+        {
+          "format": "short"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "type": "stat",
+      "title": "Total Resources",
+      "targets": [
+        {
+          "expr": "pg_stat_user_tables_n_live_tup{relname=\"resources\"}",
+          "refId": "A"
+        }
+      ],
+      "datasource": "Prometheus",
+      "options": {
+        "graphMode": "area",
+        "colorMode": "value"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "green"
+              },
+              {
+                "value": 50,
+                "color": "yellow"
+              },
+              {
+                "value": 100,
+                "color": "red"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "type": "stat",
+      "title": "Active Users",
+      "targets": [
+        {
+          "expr": "pg_stat_user_tables_n_live_tup{relname=\"app_users\"}",
+          "refId": "A"
+        }
+      ],
+      "datasource": "Prometheus",
+      "options": {
+        "graphMode": "area",
+        "colorMode": "value"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "blue"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "type": "stat",
+      "title": "Usage Statistics Records",
+      "targets": [
+        {
+          "expr": "pg_stat_user_tables_n_live_tup{relname=\"usage_stats\"}",
+          "refId": "A"
+        }
+      ],
+      "datasource": "Prometheus",
+      "options": {
+        "graphMode": "area",
+        "colorMode": "value"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "purple"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "type": "graph",
+      "title": "Database Operations Over Time",
+      "targets": [
+        {
+          "expr": "pg_stat_user_tables_n_tup_ins{relname=\"resources\"}",
+          "legendFormat": "Total INSERTs",
+          "refId": "A"
+        },
+        {
+          "expr": "pg_stat_user_tables_n_tup_upd{relname=\"resources\"}",
+          "legendFormat": "Total UPDATEs",
+          "refId": "B"
+        },
+        {
+          "expr": "pg_stat_user_tables_n_tup_del{relname=\"resources\"}",
+          "legendFormat": "Total DELETEs",
+          "refId": "C"
+        }
+      ],
+      "datasource": "Prometheus",
+      "xaxis": {
+        "mode": "time"
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": "Total Operations"
+        },
+        {
+          "format": "short"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "5s"
+}
