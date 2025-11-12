@@ -119,8 +119,8 @@ def register():
             'message': 'User registered successfully',
             'email': email
         }), 201
-    except Exception as e:
-        return jsonify({'message': f'Registration failed: {str(e)}'}), 500
+    except Exception:
+        return jsonify({'message': 'Registration failed'}), 500
     finally:
         conn.close()
 
@@ -166,8 +166,8 @@ def create_resource():
             'message': 'Resource created successfully',
             'id': resource_id
         }), 201
-    except Exception as e:
-        return jsonify({'message': f'Failed to create resource: {str(e)}'}), 500
+    except Exception:
+        return jsonify({'message': 'Failed to create resource'}), 500
     finally:
         if conn:
             cursor.close()
@@ -191,8 +191,8 @@ def read_resources():
             'message': 'Resources retrieved successfully',
             'data': resources
         }), 200
-    except Exception as e:
-        return jsonify({'message': f'Failed to read resources: {str(e)}'}), 500
+    except Exception:
+        return jsonify({'message': 'Failed to read resources'}), 500
     finally:
         if conn:
             cursor.close()
@@ -238,8 +238,8 @@ def update_resource():
             'message': 'Resource updated successfully',
             'id': data['id']
         }), 200
-    except Exception as e:
-        return jsonify({'message': f'Failed to update resource: {str(e)}'}), 500
+    except Exception:
+        return jsonify({'message': 'Failed to update resource'}), 500
     finally:
         if conn:
             cursor.close()
@@ -272,8 +272,8 @@ def delete_resource():
             'message': 'Resource deleted successfully',
             'id': data['id']
         }), 200
-    except Exception as e:
-        return jsonify({'message': f'Failed to delete resource: {str(e)}'}), 500
+    except Exception:
+        return jsonify({'message': 'Failed to delete resource'}), 500
     finally:
         if conn:
             cursor.close()
