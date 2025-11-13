@@ -1,183 +1,315 @@
-# InfoSystem - Monitoring System with Authorization
+# Database Monitoring System with Flask
 
-This project implements a comprehensive monitoring system with JWT-based authorization for PostgreSQL database operations using Prometheus, Grafana, and Flask.
+Система моніторингу бази даних з використанням Prometheus та Grafana для відстеження активності користувачів та роботи з ресурсами.
 
-## Architecture
+## Архітектура
 
-The system consists of the following services:
+Система складається з наступних компонентів:
 
-1. **PostgreSQL Database** - Stores resources, users, and usage statistics
-2. **Data Generator** - Python script that simulates database activity
-3. **Prometheus** - Collects and stores metrics
-4. **Postgres Exporter** - Exports PostgreSQL metrics to Prometheus
-5. **Grafana** - Visualizes metrics through dashboards
-6. **Auth Service** - Flask-based JWT authentication service
-7. **Nginx Reverse Proxy** - Protects Grafana access with JWT validation
+1. **PostgreSQL Database** - Зберігання ресурсів, користувачів та статистики використання
+2. **Data Generator** - Python скрипт для симуляції активності в БД
+3. **Prometheus** - Збір та зберігання метрик (Time Series Database)
+4. **Postgres Exporter** - Експорт метрик PostgreSQL до Prometheus
+5. **Grafana** - Візуалізація метрик через дашборди
+6. **Auth Service** - Flask сервіс з JWT аутентифікацією та CRUD API
 
-## Features
+## Функціональність
 
-- JWT token-based authentication
-- Protected Grafana access through Nginx reverse proxy
-- Custom business metrics dashboards:
-  - Resource operations (INSERT/UPDATE/DELETE) tracking
-  - Active users monitoring
-  - Usage statistics visualization
-- Automatic database initialization
-- Real-time metrics collection and visualization
+- ✅ JWT токен-базована аутентифікація
+- ✅ CRUD операції з ресурсами (авторизовані користувачі)
+- ✅ Prometheus метрики для відстеження дій користувачів
+- ✅ Автоматична ініціалізація баз даних
+- ✅ Real-time збір та візуалізація метрик
+- ✅ Генерація тестових даних
 
-## Getting Started
+## Швидкий старт
 
-### Prerequisites
+### Вимоги
 
 - Docker
 - Docker Compose v2
 
-### Running the System
+### Запуск системи
 
-1. Start all services:
 ```bash
-docker compose up -d
+docker-compose down -v && docker-compose up -d --build
 ```
 
-2. Wait for services to initialize (about 30 seconds)
+Очікуйте 30-60 секунд для ініціалізації всіх сервісів.
 
-3. Check service status:
+### Перевірка статусу
+
 ```bash
-docker compose ps
+docker-compose ps
 ```
 
-### Accessing Services
+### Доступ до сервісів
 
-- **Auth Service (Direct)**: http://localhost:5000
-- **Grafana (Direct, no auth)**: http://localhost:3000 (admin/admin)
-- **Grafana (Protected via Nginx)**: http://localhost:8080 (requires JWT token)
+- **Auth Service**: http://localhost:5000
+- **Prometheus Metrics**: http://localhost:5000/metrics
+- **Grafana**: http://localhost:3000 (admin/admin)
 - **Prometheus**: http://localhost:9090
 - **PostgreSQL**: localhost:55432 (metrics/metrics_pass)
 
-## Authentication Flow
+## API Endpoints
 
-1. **Login** - Get JWT token:
+### Аутентифікація
+
+**Реєстрація користувача**
 ```bash
-curl -X POST http://localhost:5000/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@example.com","password":"admin"}'
+POST /register
+Content-Type: application/json
+
+Body:
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+
+Response (201):
+{
+  "message": "User registered successfully"
+}
 ```
 
-Response:
-```json
+**Вхід в систему (Login)**
+```bash
+POST /login
+Content-Type: application/json
+
+Body:
+{
+  "email": "admin@example.com",
+  "password": "admin"
+}
+
+Response (200):
 {
   "message": "Login successful",
   "token": "eyJ0eXAiOiJKV1QiLCJhbGc..."
 }
 ```
 
-2. **Verify Token**:
+**Перевірка токену**
 ```bash
-curl -X GET http://localhost:5000/verify \
-  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+GET /verify
+Authorization: Bearer <your-token>
+
+Response (200):
+{
+  "message": "Token is valid",
+  "email": "admin@example.com"
+}
 ```
 
-3. **Access Grafana through Nginx** (requires token in Authorization header):
+### CRUD операції (потрібен JWT токен)
+
+**Створити ресурс**
 ```bash
-curl http://localhost:8080/ \
-  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+POST /actions/create
+Authorization: Bearer <your-token>
+Content-Type: application/json
+
+Body:
+{
+  "name": "Resource Name",
+  "author": "Author Name",
+  "annotation": "Description",
+  "kind": "article",
+  "purpose": "education",
+  "open_date": "2024-01-01",
+  "expiry_date": "2025-01-01",
+  "usage_conditions": "public",
+  "url": "https://example.com"
+}
+
+Response (201):
+{
+  "message": "Resource created successfully",
+  "id": 1
+}
 ```
 
-## Test Users
+**Отримати всі ресурси**
+```bash
+GET /actions/read
+Authorization: Bearer <your-token>
 
-Default test users (defined in `auth/init.db.sql`):
+Response (200):
+{
+  "message": "Resources retrieved successfully",
+  "data": [...]
+}
+```
+
+**Оновити ресурс**
+```bash
+POST /actions/update
+Authorization: Bearer <your-token>
+Content-Type: application/json
+
+Body:
+{
+  "id": 1,
+  "name": "Updated Name",
+  "annotation": "Updated description"
+}
+
+Response (200):
+{
+  "message": "Resource updated successfully",
+  "id": 1
+}
+```
+
+**Видалити ресурс**
+```bash
+DELETE /actions/delete
+Authorization: Bearer <your-token>
+Content-Type: application/json
+
+Body:
+{
+  "id": 1
+}
+
+Response (200):
+{
+  "message": "Resource deleted successfully",
+  "id": 1
+}
+```
+
+### Моніторинг
+
+**Prometheus метрики**
+```bash
+GET /metrics
+
+Response: Prometheus-formatted metrics
+```
+
+## Тестові користувачі
+
+За замовчуванням доступні користувачі (визначені в `auth/init.db.sql`):
 - `admin@example.com` / `admin`
 - `user@example.com` / `user`
 
-## Testing
+## Тестування
 
-Run the automated test script:
+Запустіть автоматизований тестовий скрипт:
 ```bash
 python test_auth.py
 ```
 
-This script tests:
-- Login with correct credentials
-- Login with incorrect credentials
-- Token verification
-- Nginx proxy authentication
+Скрипт тестує:
+- Реєстрацію нових користувачів
+- Логін з правильними та неправильними credentials
+- Перевірку токену
+- CRUD операції (create, read, update, delete)
+- Метрики
 
-## Custom Dashboards
+## Метрики
 
-The system includes a custom "Business Metrics" dashboard that displays:
+Система збирає наступні метрики:
 
-1. **Resource Operations Rate** - Real-time INSERT/UPDATE/DELETE operations per second
-2. **Total Resources** - Current number of resources in the database
-3. **Active Users** - Number of registered users
-4. **Usage Statistics Records** - Total usage tracking records
-5. **Database Operations Over Time** - Historical view of all operations
+- `user_actions_total{action="create|read|update|delete", user="email"}` - Кількість операцій по типу та користувачу
+- `flask_http_request_total` - Загальна кількість HTTP запитів
+- `flask_http_request_duration_seconds` - Тривалість запитів
+- PostgreSQL метрики (через postgres_exporter):
+  - Активні з'єднання
+  - Кількість транзакцій
+  - Розмір БД
+  - І багато інших
 
-## Development
-
-### Directory Structure
+## Структура проекту
 
 ```
-.
-├── auth/                   # Authentication service
-│   ├── Dockerfile
-│   ├── main.py            # Flask app with JWT
-│   ├── database.py        # Database initialization
-│   ├── entrypoint.sh      # Container startup script
-│   ├── init.db.sql        # Initial database schema
-│   └── requirements.txt
-├── grafana/               # Grafana configuration
-│   ├── provisioning/      # Auto-provisioning configs
+/
+├── auth/                      # Сервіс аутентифікації
+│   ├── main.py               # Flask API з JWT та CRUD
+│   ├── database.py           # Ініціалізація SQLite БД
+│   ├── init.db.sql           # SQL схема для users.db
+│   ├── entrypoint.sh         # Startup скрипт для Docker
+│   ├── Dockerfile            # Docker образ auth сервісу
+│   ├── requirements.txt      # Python залежності
+│   └── users.db              # SQLite база користувачів
+├── python/                   # Генератор даних
+│   ├── generator.py          # Скрипт симуляції активності
+│   ├── Dockerfile            # Docker образ генератора
+│   └── requirements.txt      # Python залежності
+├── sql/                      # PostgreSQL ініціалізація
+│   └── init.sql              # SQL схема для resources, app_users, usage_stats
+├── grafana/                  # Grafana конфігурація
+│   ├── provisioning/         # Auto-provisioning
 │   │   ├── dashboards/
+│   │   │   └── default.yml
 │   │   └── datasources/
-│   └── dashboards/        # Custom dashboard definitions
-├── nginx/                 # Nginx reverse proxy
-│   └── nginx.conf         # Nginx configuration
-├── prometheus/            # Prometheus configuration
-│   └── prometheus.yml
-├── python/                # Data generator
-│   └── generator.py
-├── sql/                   # PostgreSQL initialization
-│   └── init.sql
-├── docker-compose.yml     # Service orchestration
-└── test_auth.py          # Authentication tests
-
+│   │       └── prometheus.yml
+│   └── dashboards/           # JSON дашборди
+│       ├── auth_service_monitoring.json
+│       └── business_metrics.json
+├── prometheus/               # Prometheus конфігурація
+│   └── prometheus.yml        # Scrape configs
+├── docker-compose.yml        # Оркестрація сервісів
+├── test_auth.py             # Автоматизовані тести
+└── README.md                # Цей файл
 ```
 
-### Stopping the System
+## Команди
+
+### Перегляд логів
 
 ```bash
-docker compose down
+# Логи всіх сервісів
+docker-compose logs -f
+
+# Логи конкретного сервісу
+docker-compose logs -f auth
+docker-compose logs -f postgres
+docker-compose logs -f prometheus
+docker-compose logs -f grafana
+docker-compose logs -f generator
 ```
 
-To remove all data volumes:
-```bash
-docker compose down -v
+## Grafana Dashboards
+
+Система включає 2 преконфігуровані дашборди:
+
+### 1. Auth Service Monitoring
+- HTTP request rate
+- Request duration
+- Error rate
+- User actions по типу (create/read/update/delete)
+
+### 2. Business Metrics
+- Resource operations rate (INSERT/UPDATE/DELETE)
+- Total resources
+- Active users
+- Usage statistics records
+- Database operations over time
+
+Доступ: http://localhost:3000 (admin/admin)
+
+## Розширення
+
+### Додавання нових метрик
+
+Додайте Counter/Gauge/Histogram в `auth/main.py`:
+```python
+from prometheus_client import Counter
+
+custom_metric = Counter('metric_name', 'Description', ['label1', 'label2'])
+custom_metric.labels(label1='value1', label2='value2').inc()
 ```
 
-## Security Notes
+### Додавання нових endpoints
 
-- The secret key in `auth/main.py` should be changed in production
-- JWT tokens expire after 24 hours
-- Passwords are currently stored in plain text (should use hashing in production)
-- Consider using environment variables for sensitive configuration
-
-## Troubleshooting
-
-### Auth service fails to start
-Check the entrypoint.sh file encoding:
-```bash
-file auth/entrypoint.sh
-```
-
-### Grafana dashboards not appearing
-Restart the Grafana service:
-```bash
-docker compose restart grafana
-```
-
-### Connection refused errors
-Ensure all services are healthy:
-```bash
-docker compose ps
-docker compose logs [service-name]
+Створіть новий Blueprint або додайте route в `auth/main.py`:
+```python
+@app.route('/new-endpoint', methods=['GET'])
+@verify_token
+def new_endpoint():
+    # Your logic here
+    return jsonify({'data': 'response'}), 200
 ```

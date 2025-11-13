@@ -85,6 +85,35 @@ def login():
     
     return jsonify({'message': 'Invalid credentials'}), 401
 
+@app.route('/register', methods=['POST'])
+def register():
+    """Register a new user"""
+    data = request.get_json()
+
+    if not data or not data.get('email') or not data.get('password'):
+        return jsonify({'message': 'Missing email or password'}), 400
+
+    email = data['email']
+    password = data['password']
+
+    try:
+        conn = get_db_connection()
+        # Check if user already exists
+        existing_user = conn.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
+
+        if existing_user:
+            conn.close()
+            return jsonify({'message': 'User already exists'}), 409
+
+        # Insert new user
+        conn.execute('INSERT INTO users (email, password) VALUES (?, ?)', (email, password))
+        conn.commit()
+        conn.close()
+
+        return jsonify({'message': 'User registered successfully'}), 201
+    except Exception as e:
+        return jsonify({'message': 'Registration failed', 'error': str(e)}), 500
+
 @app.route('/verify', methods=['GET'])
 @verify_token
 def verify():
@@ -105,6 +134,8 @@ def create_resource():
     if not data or not data.get('name'):
         return jsonify({'message': 'Missing required field: name'}), 400
     
+    conn = None
+    cursor = None
     try:
         conn = get_postgres_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
@@ -138,14 +169,17 @@ def create_resource():
     except Exception:
         return jsonify({'message': 'Failed to create resource'}), 500
     finally:
-        if conn:
+        if cursor:
             cursor.close()
+        if conn:
             conn.close()
 
 @actions_bp.route('/read', methods=['GET'])
 @verify_token
 def read_resources():
     """Read all resources from PostgreSQL"""
+    conn = None
+    cursor = None
     try:
         conn = get_postgres_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
@@ -163,8 +197,9 @@ def read_resources():
     except Exception:
         return jsonify({'message': 'Failed to read resources'}), 500
     finally:
-        if conn:
+        if cursor:
             cursor.close()
+        if conn:
             conn.close()
 
 @actions_bp.route('/update', methods=['POST'])
@@ -176,6 +211,8 @@ def update_resource():
     if not data or not data.get('id'):
         return jsonify({'message': 'Missing required field: id'}), 400
     
+    conn = None
+    cursor = None
     try:
         conn = get_postgres_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
@@ -210,8 +247,9 @@ def update_resource():
     except Exception:
         return jsonify({'message': 'Failed to update resource'}), 500
     finally:
-        if conn:
+        if cursor:
             cursor.close()
+        if conn:
             conn.close()
 
 @actions_bp.route('/delete', methods=['DELETE'])
@@ -223,6 +261,8 @@ def delete_resource():
     if not data or not data.get('id'):
         return jsonify({'message': 'Missing required field: id'}), 400
     
+    conn = None
+    cursor = None
     try:
         conn = get_postgres_connection()
         cursor = conn.cursor()
@@ -244,8 +284,9 @@ def delete_resource():
     except Exception:
         return jsonify({'message': 'Failed to delete resource'}), 500
     finally:
-        if conn:
+        if cursor:
             cursor.close()
+        if conn:
             conn.close()
 
 # Register the actions blueprint
