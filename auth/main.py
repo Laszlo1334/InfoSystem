@@ -93,37 +93,6 @@ def verify():
         'email': request.current_user
     }), 200
 
-@app.route('/register', methods=['POST'])
-def register():
-    """Register a new user"""
-    data = request.get_json()
-    
-    if not data or not data.get('email') or not data.get('password'):
-        return jsonify({'message': 'Missing email or password'}), 400
-    
-    email = data['email']
-    password = data['password']
-    
-    conn = get_db_connection()
-    try:
-        # Check if user already exists
-        existing_user = conn.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
-        if existing_user:
-            return jsonify({'message': 'User already exists'}), 409
-        
-        # Create new user
-        conn.execute('INSERT INTO users (email, password) VALUES (?, ?)', (email, password))
-        conn.commit()
-        
-        return jsonify({
-            'message': 'User registered successfully',
-            'email': email
-        }), 201
-    except Exception:
-        return jsonify({'message': 'Registration failed'}), 500
-    finally:
-        conn.close()
-
 # Create actions blueprint for CRUD operations
 actions_bp = Blueprint('actions', __name__, url_prefix='/actions')
 

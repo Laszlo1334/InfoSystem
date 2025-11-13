@@ -83,7 +83,7 @@ services:
       postgres:
         condition: service_healthy  # << чекаємо на healthcheck
 
-  # Сервер авторизації
+    # Сервер авторизації
   auth:
     build: ./auth
     container_name: dbm_auth
@@ -97,13 +97,13 @@ services:
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
     volumes:
-      - authdata:/app
+      - ./auth:/app
     depends_on:
       postgres:
         condition: service_healthy
+
 
 volumes:
   pgdata:
   promdata:
   grafanadata:
-  authdata:
